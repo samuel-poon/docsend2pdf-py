@@ -4,7 +4,7 @@ Use DocSend2PDF with Python. I am not affiliated with DocSend2PDF or DocSend in 
 
 ## Installation
 ```bash
-pip3 install git+https://github.com/samuelpoon/docsend2pdf.git
+pip3 install git+https://github.com/samuel-poon/docsend2pdf-py.git
 ```
 
 ## Quick Start
