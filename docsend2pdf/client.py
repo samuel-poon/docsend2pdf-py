@@ -3,19 +3,15 @@ from bs4 import BeautifulSoup
 
 from .exceptions import InvalidPDFError
 
-class DocSendClient:
-    def __init__(self):
-        self.session = requests.Session()
-        self.csrf_tokens = {}
-    
-    def generate_csrf_tokens(self):
+class DocSendClient:    
+    def generate_csrf_tokens(self) -> dict:
         try:
-            r = self.session.get('https://docsend2pdf.com/')
+            r = requests.get('https://docsend2pdf.com/')
             r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise requests.exceptions.RequestException('Failed to generate CSRF tokens.') from e
 
-        cookies = self.session.cookies.get_dict()
+        cookies = r.cookies.get_dict()
         soup = BeautifulSoup(r.content, 'html.parser')
 
         csrftoken = cookies['csrftoken']
@@ -26,9 +22,6 @@ class DocSendClient:
             'csrfmiddlewaretoken': csrfmiddlewaretoken
         }
     
-    def refresh_csrf_tokens(self):
-        self.csrf_tokens = self.generate_csrf_tokens()
-    
     def get_pdf(
             self,
             url:str,
@@ -37,11 +30,10 @@ class DocSendClient:
             searchable: bool        = True,
         ) -> bytes:
 
-        if not all(key in self.csrf_tokens for key in ['csrftoken', 'csrfmiddlewaretoken']):
-            self.refresh_csrf_tokens()
-
+        csrf_tokens = self.generate_csrf_tokens()
+        
         payload = {
-            'csrfmiddlewaretoken': self.csrf_tokens.get('csrfmiddlewaretoken'),
+            'csrfmiddlewaretoken': csrf_tokens.get('csrfmiddlewaretoken'),
             'url': url,
             'email': email,
             'passcode': passcode,
@@ -51,7 +43,7 @@ class DocSendClient:
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Cookie': f'csrftoken={self.csrf_tokens.get("csrftoken")}',
+            'Cookie': f'csrftoken={csrf_tokens.get("csrftoken")}',
             'Origin': 'https://docsend2pdf.com',
             'Referer': 'https://docsend2pdf.com/',
         }
