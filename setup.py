@@ -6,7 +6,7 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/samuel-poon/docsend2pdf-py',
-    version='0.0.1',
+    version='0.0.2',
     python_requires='>=3.8',
     install_requires=[
         'requests',
