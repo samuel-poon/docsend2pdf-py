@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from .exceptions import InvalidPDFError
+from .exceptions import InvalidPDFError, InvalidURLError, InvalidCredentialsError
 
 class DocSendClient:    
     def generate_csrf_tokens(self) -> dict:
@@ -31,7 +31,7 @@ class DocSendClient:
         ) -> bytes:
 
         csrf_tokens = self.generate_csrf_tokens()
-        
+
         payload = {
             'csrfmiddlewaretoken': csrf_tokens.get('csrfmiddlewaretoken'),
             'url': url,
@@ -53,8 +53,21 @@ class DocSendClient:
         if response.content.startswith(b'%PDF-'): # All valid PDFs should start with %PDF-
             return response.content
         
-        else:
-            raise InvalidPDFError(f'Failed to download PDF. Is {url} a valid DocSend link? Check if an email or password is required.')
+        # To do: see if there is a more robust way of checking for errors
+        elif response.headers.get('Content-Type') == 'text/html; charset=utf-8':
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            if soup.find('p', {'class':'text-danger'}):
+                text_danger = soup.find('p', {'class':'text-danger'}).text
+            
+                if text_danger.startswith('Unable to authenticate with provided credentials'):
+                    raise InvalidCredentialsError(f'Failed to authenticate with provided credentials. Check if {passcode} is the correct password.')
+        
+                if text_danger.startswith('Invalid url'):
+                    raise InvalidURLError(f'{url} is not a valid DocSend link. Please check the URL and try again.')
+    
+        # Catch if error cannot be determined
+        raise InvalidPDFError(f'Failed to download PDF. Is {url} a valid DocSend link? Check if an email or password is required.')
         
     def download(
             self,
