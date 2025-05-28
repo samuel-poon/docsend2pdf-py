@@ -1,5 +1,7 @@
 # DocSend2PDF (Unofficial)
 
+*Note: DocSend2PDF now has an [API](https://docsend2pdf.com/api-docs) so ignore this and please use that instead.*
+
 Use DocSend2PDF with Python. I am not affiliated with DocSend2PDF or DocSend in any way.
 
 ## Installation
